@@ -50,6 +50,7 @@ class SearchResult(BaseModel):
     link: str = "#"
     description: str = ""
     image_url: str = ""
+    products: List[dict] = []
 
 @app.post("/analyze-card")
 async def analyze_card(
@@ -249,13 +250,15 @@ async def search_gifts(request: SearchRequest):
                 price="N/A", # Not applicable for vendor
                 link=item.get("website", "#"),
                 description=item.get("specialty", ""),
-                image_url=""
+                image_url="",
+                products=item.get("products", [])
             ))
         
         return {
             "internal_results": internal_results,
             "web_products": web_products,
-            "web_vendors": web_vendors
+            "web_vendors": web_vendors,
+            "market_insights": gemini_data.get("market_insights", {})
         }
 
     except Exception as e:

@@ -1,0 +1,35 @@
+# Environment Variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Javascript / Node
+node_modules/
+dist/
+build/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+
+# Backend specific
+backend/storytellerz.db
+backend/models_list.txt
+storytellerz.db
+models_list.txt
+
+# OS
+.DS_Store
+Thumbs.db
