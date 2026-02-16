@@ -8,6 +8,7 @@ import uuid
 import json
 from typing import List, Optional
 from PIL import Image
+import datetime
 
 from db import init_db, save_card, get_all_cards, search_cards, update_card, delete_card
 from services import gemini_service, status_service
@@ -165,33 +166,35 @@ async def analyze_card(
 @app.post("/save-vendor")
 async def save_vendor_endpoint(card_data: dict):
     try:
-        # Merge products into additional_info for storage and searchability
-        # This logic was previously in upload-card, now client sends pre-processed data
-        # or we can re-add it here if the client sends raw extracted_data
-        
-        # For now, assuming card_data is already structured for saving
-        # If 'products' is still separate, merge it here:
-        if "products" in card_data and isinstance(card_data.get("additional_info"), dict):
+        # Validate additional_info is a dict
+        if "additional_info" not in card_data or not isinstance(card_data["additional_info"], dict):
+            card_data["additional_info"] = {}
+
+        # Merge products into additional_info
+        if "products" in card_data:
             card_data["additional_info"]["products_sold"] = card_data.pop("products")
-        elif "products" in card_data: # if additional_info wasn't there
-            card_data["additional_info"] = {"products_sold": card_data.pop("products")}
 
         card_id = save_card(card_data)
         return {"id": card_id, "message": "Vendor saved successfully"}
     except Exception as e:
+        print(f"Save Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.put("/update-vendor/{card_id}")
 async def update_vendor_endpoint(card_id: int, card_data: dict):
     try:
-        if "products" in card_data and isinstance(card_data.get("additional_info"), dict):
-             card_data["additional_info"]["products_sold"] = card_data.pop("products")
-        elif "products" in card_data:
-             card_data["additional_info"] = {"products_sold": card_data.pop("products")}
+        # Validate additional_info is a dict
+        if "additional_info" not in card_data or not isinstance(card_data["additional_info"], dict):
+            card_data["additional_info"] = {}
+
+        # Merge products into additional_info
+        if "products" in card_data:
+            card_data["additional_info"]["products_sold"] = card_data.pop("products")
         
         update_card(card_id, card_data)
         return {"id": card_id, "message": "Vendor updated successfully"}
     except Exception as e:
+        print(f"Update Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/delete-vendor/{card_id}")
@@ -256,7 +259,11 @@ async def search_gifts(request: SearchRequest):
         }
 
     except Exception as e:
-        print(f"Search API Error: {e}")
+        import traceback
+        error_msg = f"Search API Error: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        with open("backend_errors.log", "a") as f:
+            f.write(f"[{datetime.datetime.now()}] {error_msg}\n")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

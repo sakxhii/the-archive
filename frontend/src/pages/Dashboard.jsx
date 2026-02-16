@@ -56,7 +56,9 @@ const Dashboard = () => {
         social_media: '',
         designation: '',
         pricing_guide: [],
-        image_path: ''
+        image_path: '',
+        supplier_type: 'Unknown',
+        source_origin: ''
     });
 
     useEffect(() => {
@@ -154,7 +156,9 @@ const Dashboard = () => {
                 social_media: raw.additional_info?.social_media || '',
                 designation: raw.additional_info?.designation || '',
                 pricing_guide: normalizePricing(raw.additional_info?.pricing_guide),
-                image_path: raw.image_path
+                image_path: raw.image_path,
+                supplier_type: raw.additional_info?.supplier_type || 'Unknown',
+                source_origin: raw.additional_info?.source_origin || ''
             });
 
             setProcessingStep('reviewing');
@@ -197,7 +201,9 @@ const Dashboard = () => {
             social_media: card.additional_info?.social_media || '',
             designation: card.additional_info?.designation || '',
             pricing_guide: normalizePricing(card.additional_info?.pricing_guide),
-            image_path: card.image_path
+            image_path: card.image_path,
+            supplier_type: card.additional_info?.supplier_type || 'Unknown',
+            source_origin: card.additional_info?.source_origin || ''
         });
         setUploadStatus('');
         setLoading(false);
@@ -205,6 +211,13 @@ const Dashboard = () => {
     };
 
     const handleSaveVendor = async () => {
+        console.log("handleSaveVendor called");
+        if (!formData.name || !formData.name.trim()) {
+            setUploadStatus('Business Name is required *');
+            setStatusType('error');
+            return;
+        }
+
         setLoading(true);
         setProcessingStep('saving');
 
@@ -226,9 +239,12 @@ const Dashboard = () => {
                     tagline: formData.tagline,
                     social_media: formData.social_media,
                     designation: formData.designation,
-                    pricing_guide: formData.pricing_guide
+                    pricing_guide: formData.pricing_guide,
+                    supplier_type: formData.supplier_type,
+                    source_origin: formData.source_origin
                 }
             };
+            console.log("Saving payload:", payload);
 
             if (formData.id) {
                 // Update existing
@@ -347,6 +363,7 @@ const Dashboard = () => {
                         </div>
 
                         {/* Stats Cards */}
+                        {/* Stats Cards */}
                         <div className="flex gap-4">
                             <div className="bg-white/10 backdrop-blur-md border border-white/20 px-8 py-5 rounded-2xl shadow-xl hover:bg-white/15 transition-all group">
                                 <div className="flex items-center gap-4">
@@ -364,599 +381,669 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            <div className="container mx-auto max-w-7xl px-6 -mt-8 relative z-20">
-                {/* Filters & Actions - Elevated Card */}
-                <div className="bg-white rounded-2xl shadow-2xl border border-brand-100 p-6 mb-8 backdrop-blur-sm">
-                    <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-                        <div className="flex gap-4 w-full md:w-auto flex-1">
-                            {/* Search Input */}
-                            <div className="relative flex-1 md:max-w-md group">
-                                <span className="material-icons-outlined absolute left-4 top-1/2 -translate-y-1/2 text-brand-400 group-focus-within:text-accent transition-colors">search</span>
-                                <input
-                                    type="text"
-                                    placeholder="Search vendors by name or products..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-brand-200 focus:border-accent focus:ring-4 focus:ring-accent/10 text-brand-800 bg-brand-50/50 transition-all placeholder:text-brand-400"
-                                />
-                            </div>
-
-                            {/* Category Filter */}
-                            <div className="relative group">
-                                <select
-                                    value={filterCategory}
-                                    onChange={(e) => setFilterCategory(e.target.value)}
-                                    className="appearance-none pl-4 pr-12 py-3.5 rounded-xl border-2 border-brand-200 focus:border-accent focus:ring-4 focus:ring-accent/10 text-brand-800 bg-brand-50/50 font-semibold cursor-pointer hover:bg-brand-100 transition-all"
-                                >
-                                    {uniqueCategories.map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
-                                    ))}
-                                </select>
-                                <span className="material-icons-outlined absolute right-4 top-1/2 -translate-y-1/2 text-brand-500 pointer-events-none group-focus-within:text-accent transition-colors">tune</span>
-                            </div>
-                        </div>
-
-                        {/* Export Button */}
-                        <button
-                            onClick={handleExportCSV}
-                            className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-brand-800 to-brand-900 hover:from-brand-700 hover:to-brand-800 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0"
-                        >
-                            <span className="material-icons-outlined">file_download</span>
-                            Export CSV
-                        </button>
-                    </div>
-                </div>
-
+            <div className="container mx-auto max-w-7xl px-6 relative z-20 pt-12">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Upload Sidebar - Enhanced */}
-                    <div className="lg:col-span-4 xl:col-span-3">
-                        <div className="bg-gradient-to-br from-white to-brand-50/50 rounded-2xl shadow-xl border border-brand-200 p-8 sticky top-24 backdrop-blur-sm">
-                            <div className="flex items-center gap-3 mb-6 pb-6 border-b border-brand-200">
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center shadow-lg">
-                                    <span className="material-icons-outlined text-white text-xl">add_business</span>
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-bold text-brand-900 font-serif leading-tight">Add New Vendor</h2>
-                                    <p className="text-xs text-brand-500 font-medium">Upload business card</p>
-                                </div>
+                    {/* Left Sidebar - Upload & Actions */}
+                    <div className="lg:col-span-5 xl:col-span-4 space-y-6">
+                        {/* Search & Filter Card (Moved to sidebar for better layout query or keep on top? Let's keep a unified toolbar on top actually, but for this specific request, let's try a distinct layout: Sidebar has upload, Main area has list + toolbar) */}
+
+                        {/* Actually, let's keep the layout: Toolbar on top of list. Sidebar on left. */}
+
+                        {/* Upload Card */}
+                        <div className="bg-white rounded-3xl shadow-xl shadow-brand-900/5 border border-white/50 overflow-hidden sticky top-28 backdrop-blur-xl">
+                            <div className="p-8 bg-brand-900 text-white relative overflow-hidden">
+                                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                                <h2 className="text-2xl font-serif font-bold flex items-center gap-3 relative z-10">
+                                    <span className="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center shadow-lg shadow-accent/20">
+                                        <span className="material-icons-outlined text-xl">add</span>
+                                    </span>
+                                    Add Vendor
+                                </h2>
+                                <p className="text-brand-200 text-sm mt-3 ml-14 opacity-80 leading-relaxed">Upload business card scans to instantly extract and save vendor details.</p>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="p-8 space-y-8">
                                 {/* Front Side */}
-                                <div>
-                                    <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-2">Front Side *</label>
-                                    <div className={`border-2 border-dashed rounded-xl p-4 text-center transition-all duration-300 group ${frontFile ? 'border-accent bg-accent/5' : 'border-brand-200 hover:border-brand-400 hover:bg-brand-50'}`}>
-                                        <input type="file" accept="image/*" onChange={handleFrontChange} id="front-upload" className="hidden" />
-                                        <label htmlFor="front-upload" className="cursor-pointer flex flex-col items-center justify-center h-full">
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-baseline">
+                                        <label className="text-sm font-bold text-brand-600 uppercase tracking-wider">Front Side</label>
+                                        <span className="text-[10px] text-accent font-bold px-2 py-0.5 bg-accent/10 rounded-full uppercase tracking-wider">Required</span>
+                                    </div>
+                                    <div className={`relative group transition-all duration-300 rounded-2xl border-2 border-dashed h-40 ${frontFile ? 'border-accent bg-accent/5' : 'border-brand-200 hover:border-brand-400 hover:bg-brand-50/50'}`}>
+                                        <input type="file" accept="image/*" onChange={handleFrontChange} id="front-upload" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                        <div className="absolute inset-0 flex items-center justify-center p-6 text-center pointer-events-none">
                                             {frontFile ? (
-                                                <>
-                                                    <div className="w-12 h-12 bg-white rounded-lg shadow-sm flex items-center justify-center mb-2 mx-auto">
-                                                        <span className="material-icons-outlined text-2xl text-accent">image</span>
+                                                <div className="animate-fade-in w-full">
+                                                    <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3 mx-auto text-accent">
+                                                        <span className="material-icons-outlined text-2xl">check_circle</span>
                                                     </div>
-                                                    <p className="text-xs font-bold text-brand-700 truncate max-w-[150px] mx-auto">{frontFile.name}</p>
-                                                    <p className="text-[10px] text-accent mt-1 font-medium">Click to replace</p>
-                                                </>
+                                                    <p className="text-sm font-bold text-brand-800 truncate px-2">{frontFile.name}</p>
+                                                    <p className="text-[10px] text-brand-400 mt-1 font-medium uppercase tracking-wide">Click to replace</p>
+                                                </div>
                                             ) : (
-                                                <>
-                                                    <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform">
-                                                        <span className="material-icons-outlined text-2xl text-brand-300 group-hover:text-brand-500">crop_original</span>
+                                                <div className="group-hover:transform group-hover:-translate-y-1 transition-transform duration-300">
+                                                    <div className="w-14 h-14 bg-brand-50 rounded-full flex items-center justify-center mb-3 mx-auto text-brand-300 group-hover:text-brand-500 group-hover:bg-brand-100 transition-colors">
+                                                        <span className="material-icons-outlined text-3xl">crop_original</span>
                                                     </div>
-                                                    <p className="text-xs font-bold text-brand-600">Upload Front</p>
-                                                </>
+                                                    <p className="text-sm font-bold text-brand-600">Upload Front Image</p>
+                                                    <p className="text-[10px] text-brand-400 mt-1">Supports JPG, PNG</p>
+                                                </div>
                                             )}
-                                        </label>
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Back Side */}
-                                <div>
-                                    <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-2">Back Side (Optional)</label>
-                                    <div className={`border-2 border-dashed rounded-xl p-4 text-center transition-all duration-300 group ${backFile ? 'border-accent bg-accent/5' : 'border-brand-200 hover:border-brand-400 hover:bg-brand-50'}`}>
-                                        <input type="file" accept="image/*" onChange={handleBackChange} id="back-upload" className="hidden" />
-                                        <label htmlFor="back-upload" className="cursor-pointer flex flex-col items-center justify-center h-full">
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-baseline">
+                                        <label className="text-sm font-bold text-brand-600 uppercase tracking-wider">Back Side</label>
+                                        <span className="text-[10px] text-brand-400 font-bold px-2 py-0.5 bg-brand-100 rounded-full uppercase tracking-wider">Optional</span>
+                                    </div>
+                                    <div className={`relative group transition-all duration-300 rounded-2xl border-2 border-dashed h-40 ${backFile ? 'border-accent bg-accent/5' : 'border-brand-200 hover:border-brand-400 hover:bg-brand-50/50'}`}>
+                                        <input type="file" accept="image/*" onChange={handleBackChange} id="back-upload" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                        <div className="absolute inset-0 flex items-center justify-center p-6 text-center pointer-events-none">
                                             {backFile ? (
-                                                <>
-                                                    <div className="w-12 h-12 bg-white rounded-lg shadow-sm flex items-center justify-center mb-2 mx-auto">
-                                                        <span className="material-icons-outlined text-2xl text-accent">flip</span>
+                                                <div className="animate-fade-in w-full">
+                                                    <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3 mx-auto text-accent">
+                                                        <span className="material-icons-outlined text-2xl">check_circle</span>
                                                     </div>
-                                                    <p className="text-xs font-bold text-brand-700 truncate max-w-[150px] mx-auto">{backFile.name}</p>
-                                                    <p className="text-[10px] text-accent mt-1 font-medium">Click to replace</p>
-                                                </>
+                                                    <p className="text-sm font-bold text-brand-800 truncate px-2">{backFile.name}</p>
+                                                    <p className="text-[10px] text-brand-400 mt-1 font-medium uppercase tracking-wide">Click to replace</p>
+                                                </div>
                                             ) : (
-                                                <>
-                                                    <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center mb-2 mx-auto group-hover:scale-110 transition-transform">
-                                                        <span className="material-icons-outlined text-2xl text-brand-300 group-hover:text-brand-500">flip</span>
+                                                <div className="group-hover:transform group-hover:-translate-y-1 transition-transform duration-300">
+                                                    <div className="w-14 h-14 bg-brand-50 rounded-full flex items-center justify-center mb-3 mx-auto text-brand-300 group-hover:text-brand-500 group-hover:bg-brand-100 transition-colors">
+                                                        <span className="material-icons-outlined text-3xl">flip</span>
                                                     </div>
-                                                    <p className="text-xs font-bold text-brand-600">Upload Back</p>
-                                                </>
+                                                    <p className="text-sm font-bold text-brand-600">Upload Back Image</p>
+                                                </div>
                                             )}
-                                        </label>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <button
-                                onClick={handleAnalyze}
-                                disabled={!frontFile || loading}
-                                className={`w-full mt-8 py-4 rounded-xl font-bold shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 ${!frontFile || loading
-                                    ? 'bg-brand-200 text-brand-400 cursor-not-allowed shadow-none'
-                                    : 'bg-gradient-to-r from-brand-900 to-brand-800 text-white hover:from-brand-800 hover:to-brand-700 hover:shadow-2xl hover:-translate-y-0.5'
-                                    }`}
-                            >
-                                {loading ? (
-                                    <>
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        <span>Processing...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="material-icons-outlined">auto_awesome</span>
-                                        Extract Data
-                                    </>
+                                <button
+                                    onClick={handleAnalyze}
+                                    disabled={!frontFile || loading}
+                                    className={`w-full py-5 rounded-xl font-bold text-sm tracking-wide uppercase transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 shadow-lg ${!frontFile || loading
+                                        ? 'bg-brand-100 text-brand-300 cursor-not-allowed shadow-none border border-brand-200'
+                                        : 'bg-brand-900 text-white hover:bg-brand-800 hover:shadow-brand-900/20'
+                                        }`}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            <span className="text-base">Processing Scan...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="text-base">Extract Data</span>
+                                            <span className="material-icons-outlined text-xl">auto_awesome</span>
+                                        </>
+                                    )}
+                                </button>
+
+                                {uploadStatus && !showReviewModal && (
+                                    <div className={`p-4 rounded-xl text-xs font-medium border flex items-start gap-3 animate-fade-in-up ${statusType === 'success' ? 'bg-green-50 text-green-800 border-green-100' :
+                                        statusType === 'error' ? 'bg-red-50 text-red-800 border-red-100' :
+                                            'bg-blue-50 text-blue-800 border-blue-100'
+                                        }`}>
+                                        <span className="material-icons-outlined text-sm mt-0.5">
+                                            {statusType === 'success' ? 'check_circle' : statusType === 'error' ? 'error_outline' : 'info'}
+                                        </span>
+                                        <span className="leading-relaxed">{uploadStatus}</span>
+                                    </div>
                                 )}
-                            </button>
+                            </div>
+                        </div>
+                    </div>
 
-                            {uploadStatus && !showReviewModal && (
-                                <div className={`mt-6 p-5 rounded-2xl text-sm border-2 flex items-start gap-3 animate-fade-in-up shadow-lg ${statusType === 'success' ? 'bg-gradient-to-br from-green-50 to-emerald-50 text-green-800 border-green-200' :
-                                    statusType === 'error' ? 'bg-gradient-to-br from-red-50 to-rose-50 text-red-800 border-red-200' :
-                                        'bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-800 border-blue-200'
-                                    }`}>
-                                    <span className="material-icons-outlined text-xl">
-                                        {statusType === 'success' ? 'check_circle' : statusType === 'error' ? 'error_outline' : 'info'}
-                                    </span>
-                                    <span className="font-semibold mt-0.5 leading-relaxed">{uploadStatus}</span>
+                    {/* Main Content Area */}
+                    <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+
+                        {/* Unified Toolbar */}
+                        <div className="bg-white p-2 rounded-2xl shadow-sm border border-brand-100 flex flex-col md:flex-row gap-2">
+                            <div className="relative flex-1">
+                                <span className="material-icons-outlined absolute left-4 top-3.5 text-brand-300">search</span>
+                                <input
+                                    type="text"
+                                    placeholder="Search by name, products, or tags..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-transparent border-none focus:ring-2 focus:ring-brand-100 focus:bg-brand-50/50 text-brand-800 placeholder-brand-300 font-medium transition-all"
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                <div className="relative min-w-[160px]">
+                                    <select
+                                        value={filterCategory}
+                                        onChange={(e) => setFilterCategory(e.target.value)}
+                                        className="w-full appearance-none pl-4 pr-10 py-3 rounded-xl bg-brand-50 border-none focus:ring-2 focus:ring-brand-100 text-brand-700 font-bold text-sm cursor-pointer hover:bg-brand-100 transition-colors h-full"
+                                    >
+                                        {uniqueCategories.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                    <span className="material-icons-outlined absolute right-3 top-3.5 text-brand-400 pointer-events-none text-lg">expand_more</span>
+                                </div>
+                                <button
+                                    onClick={handleExportCSV}
+                                    className="flex items-center gap-2 px-5 py-3 bg-brand-900 text-white font-bold text-sm rounded-xl hover:bg-brand-800 transition-colors shadow-lg shadow-brand-900/10 whitespace-nowrap"
+                                >
+                                    <span className="material-icons-outlined text-lg">download</span>
+                                    <span>Export</span>
+                                </button>
+                            </div>
+                        </div>
+                        {/* List Header */}
+                        <div className="hidden lg:grid grid-cols-12 gap-6 px-8 py-4 text-sm font-black text-brand-700 uppercase tracking-widest bg-white/60 rounded-2xl border border-brand-100 shadow-sm backdrop-blur-md sticky top-24 z-10">
+                            <div className="col-span-1 text-center">Card</div>
+                            <div className="col-span-4">Business Details</div>
+                            <div className="col-span-2">Category</div>
+                            <div className="col-span-4">Contact & Link</div>
+                            <div className="col-span-1 text-center"></div>
+                        </div>
+
+                        {/* Cards List */}
+                        <div className="space-y-4">
+                            {filteredCards.map(card => (
+                                <div
+                                    key={card.id}
+                                    onClick={() => handleCardClick(card)}
+                                    className="group bg-white rounded-2xl p-6 border border-brand-100 shadow-sm hover:shadow-xl hover:shadow-brand-900/5 hover:border-brand-200 transition-all duration-300 cursor-pointer grid grid-cols-1 md:grid-cols-12 gap-6 items-center relative overflow-hidden"
+                                >
+                                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                                    {/* Image */}
+                                    <div className="col-span-1 md:col-span-1 flex justify-center md:justify-center">
+                                        <div className="h-14 w-20 bg-brand-50 rounded-lg overflow-hidden border border-brand-100 relative items-center justify-center flex shadow-inner">
+                                            {card.image_path && card.image_path !== 'None' && card.image_path !== 'null' ? (
+                                                <img
+                                                    src={`${API_BASE_URL}/${card.image_path}`}
+                                                    alt="Scan"
+                                                    className="h-full w-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                                                    onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.classList.add('bg-brand-50'); }}
+                                                />
+                                            ) : (
+                                                <span className="material-icons-outlined text-xl text-brand-300">image_not_supported</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Business Info */}
+                                    <div className="col-span-1 md:col-span-4 text-center md:text-left">
+                                        <h4 className="font-bold text-brand-900 text-lg font-serif mb-1 group-hover:text-accent transition-colors truncate">{card.name}</h4>
+                                        {card.additional_info?.tagline ? (
+                                            <p className="text-sm text-brand-500 italic line-clamp-1 opacity-80">{card.additional_info.tagline}</p>
+                                        ) : (
+                                            <p className="text-xs text-brand-400 line-clamp-1 italic">
+                                                {card.additional_info?.products_sold || card.additional_info?.designation || Object.values(card.additional_info || {}).slice(0, 3).join(', ')}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Category */}
+                                    <div className="col-span-1 md:col-span-2 flex justify-center md:justify-start">
+                                        <div className="flex flex-col gap-1 items-center md:items-start">
+                                            <span className="inline-block px-3 py-1.5 rounded-full text-[10px] font-bold bg-brand-50 text-brand-600 border border-brand-200 uppercase tracking-wider group-hover:bg-brand-100 transition-colors whitespace-normal text-center leading-tight">
+                                                {card.category}
+                                            </span>
+                                            {card.additional_info?.supplier_type && card.additional_info.supplier_type !== 'Unknown' && (
+                                                <span className="inline-block px-2 py-0.5 rounded text-[9px] font-bold bg-accent/10 text-accent uppercase tracking-widest border border-accent/20">
+                                                    {card.additional_info.supplier_type}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Contact & Link */}
+                                    <div className="col-span-1 md:col-span-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                                        <div className="flex flex-col gap-1.5 min-w-0 w-full md:w-auto">
+                                            {card.contact && card.contact.split('|').slice(0, 2).map((part, i) => {
+                                                let icon = 'horizontal_rule';
+                                                let text = part.trim();
+                                                if (part.includes('Ph:')) { icon = 'call'; text = part.replace('Ph:', '').trim(); }
+                                                else if (part.includes('✉')) { icon = 'email'; text = part.replace('✉', '').trim(); }
+                                                else if (part.includes('📍')) { icon = 'place'; text = part.replace('📍', '').trim(); }
+
+                                                return (
+                                                    <div key={i} className="flex items-center gap-2 text-xs text-brand-500 justify-center md:justify-start">
+                                                        <span className="material-icons-outlined text-[13px] text-brand-300">{icon}</span>
+                                                        <span className="truncate max-w-[180px] font-medium opacity-90">{text}</span>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+
+                                        {/* Link Button */}
+                                        {card.website ? (
+                                            <a
+                                                href={card.website.startsWith('http') ? card.website : `https://${card.website}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="w-10 h-10 rounded-full bg-brand-50 hover:bg-accent hover:text-white flex items-center justify-center text-brand-400 transition-all flex-shrink-0 group/link border border-transparent hover:border-accent hover:shadow-lg hover:-translate-y-0.5"
+                                            >
+                                                <span className="material-icons-outlined text-lg group-hover/link:rotate-45 transition-transform">launch</span>
+                                            </a>
+                                        ) : (
+                                            <div className="w-10 h-10"></div>
+                                        )}
+                                    </div>
+
+                                    <div className="hidden md:flex col-span-1 justify-end pr-2">
+                                        <span className="material-icons-outlined text-brand-200 group-hover:text-accent transition-all duration-300 text-2xl transform group-hover:translate-x-1">chevron_right</span>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {filteredCards.length === 0 && (
+                                <div className="p-20 text-center bg-white rounded-3xl border border-brand-100 border-dashed">
+                                    <div className="w-20 h-20 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                                        <span className="material-icons-outlined text-4xl text-brand-300">filter_list_off</span>
+                                    </div>
+                                    <h3 className="text-xl font-serif font-bold text-brand-800 mb-2">No Vendors Found</h3>
+                                    <p className="text-brand-400">Try adjusting your search terms or filters.</p>
                                 </div>
                             )}
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    {/* Table / List Section */}
-                    <div className="lg:col-span-8 xl:col-span-9">
-                        <div className="space-y-4">
-                            {/* List Header */}
-                            <div className="hidden lg:grid grid-cols-12 gap-4 px-6 py-2 text-[10px] font-bold text-brand-400 uppercase tracking-widest bg-brand-50/50 rounded-xl border border-transparent">
-                                <div className="col-span-1 text-center">Card</div>
-                                <div className="col-span-4">Business Details</div>
-                                <div className="col-span-2">Category</div>
-                                <div className="col-span-4">Contact & Link</div>
-                                <div className="col-span-1 text-center"></div>
+            {/* Review Modal */}
+            {showReviewModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-900/60 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[90vh] flex overflow-hidden border border-white/20">
+
+                        {/* Left Side: Image Preview (Fixed) */}
+                        <div className="hidden md:flex w-[40%] bg-brand-50/50 flex-col border-r border-brand-100 relative">
+                            <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+
+                            {/* Header */}
+                            <div className="px-8 py-6 border-b border-brand-100 bg-white/50 backdrop-blur-sm flex justify-between items-center relative z-10">
+                                <h3 className="text-brand-900 font-serif font-bold text-lg flex items-center gap-2">
+                                    <span className="material-icons-outlined text-brand-400">image</span>
+                                    Original Scan
+                                </h3>
+                                <div className="text-[10px] font-bold text-brand-400 uppercase tracking-widest bg-brand-100/50 px-2 py-1 rounded">
+                                    Read Only
+                                </div>
                             </div>
 
-                            {/* Cards List */}
-                            <div className="space-y-4">
-                                {filteredCards.map(card => (
-                                    <div
-                                        key={card.id}
-                                        onClick={() => handleCardClick(card)}
-                                        className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-brand-100 shadow-md hover:shadow-2xl hover:border-accent/30 transition-all duration-300 cursor-pointer grid grid-cols-1 md:grid-cols-12 gap-6 items-center relative overflow-hidden hover:-translate-y-1"
+                            {/* Image Container */}
+                            <div className="flex-1 overflow-auto p-8 flex items-center justify-center relative z-10">
+                                <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white transition-transform hover:scale-105 duration-500 group">
+                                    <img
+                                        src={`${API_BASE_URL}/${formData.image_path}`}
+                                        alt="Scan Preview"
+                                        className="max-w-full h-auto object-contain"
+                                    />
+                                    <a
+                                        href={`${API_BASE_URL}/${formData.image_path}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold gap-2 cursor-pointer"
                                     >
-                                        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent via-accent-dark to-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                        <span className="material-icons-outlined">zoom_in</span>
+                                        View Full Size
+                                    </a>
+                                </div>
+                            </div>
 
-                                        {/* Image */}
-                                        <div className="col-span-1 md:col-span-1 flex justify-center md:justify-center">
-                                            <div className="h-14 w-20 bg-brand-50 rounded-lg overflow-hidden border border-brand-100 relative items-center justify-center flex shadow-inner">
-                                                {card.image_path && card.image_path !== 'None' && card.image_path !== 'null' ? (
-                                                    <img
-                                                        src={`${API_BASE_URL}/${card.image_path}`}
-                                                        alt="Scan"
-                                                        className="h-full w-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                                                        onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.classList.add('bg-brand-50'); }}
-                                                    />
-                                                ) : (
-                                                    <span className="material-icons-outlined text-xl text-brand-300">image_not_supported</span>
-                                                )}
+                            {/* Tip */}
+                            <div className="px-8 py-4 bg-brand-100/30 text-center relative z-10">
+                                <p className="text-xs text-brand-500">
+                                    <span className="font-bold">Tip:</span> Verify details against this image.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Right Side: Form (Scrollable) */}
+                        <div className="flex-1 flex flex-col bg-white w-full md:w-[60%]">
+
+                            {/* Modal Header */}
+                            <div className="px-8 py-5 border-b border-brand-100 flex justify-between items-center bg-white z-20">
+                                <div>
+                                    <h2 className="text-2xl font-serif font-bold text-brand-900">Review Vendor Details</h2>
+                                    <p className="text-sm text-brand-500">Ensure all information is correct before saving to the archive.</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowReviewModal(false)}
+                                    className="w-10 h-10 rounded-full bg-brand-50 hover:bg-brand-100 text-brand-500 hover:text-brand-900 flex items-center justify-center transition-all"
+                                >
+                                    <span className="material-icons-outlined">close</span>
+                                </button>
+                            </div>
+
+                            {/* Scrollable Form Content */}
+                            <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+
+                                {/* Section: Essential Info */}
+                                <section>
+                                    <div className="flex items-center gap-2 mb-6 text-brand-400 uppercase tracking-widest text-xs font-bold border-b border-brand-50 pb-2">
+                                        <span className="material-icons-outlined text-sm">business</span>
+                                        Business Essentials
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-brand-700 uppercase tracking-wider mb-2">Business Name <span className="text-red-500">*</span></label>
+                                            <input
+                                                type="text"
+                                                value={formData.name}
+                                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                                className="w-full p-3.5 bg-brand-50/50 border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-brand-900 font-serif font-bold text-lg placeholder-brand-300 transition-all"
+                                                placeholder="e.g. Acme Corp"
+                                            />
+                                        </div>
+
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-brand-700 uppercase tracking-wider mb-2">Designation</label>
+                                            <input
+                                                type="text"
+                                                value={formData.designation}
+                                                onChange={e => setFormData({ ...formData, designation: e.target.value })}
+                                                className="w-full p-3.5 bg-white border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-brand-700 font-medium placeholder-brand-300 transition-all"
+                                                placeholder="e.g. Sales Manager"
+                                            />
+                                        </div>
+
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-brand-700 uppercase tracking-wider mb-2">Category</label>
+                                            <input
+                                                type="text"
+                                                value={formData.category}
+                                                onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                                className="w-full p-3.5 bg-white border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-brand-700 font-medium placeholder-brand-300 transition-all"
+                                                placeholder="e.g. Corporate Gifting"
+                                            />
+                                        </div>
+
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-brand-700 uppercase tracking-wider mb-2">Website</label>
+                                            <div className="relative">
+                                                <span className="material-icons-outlined absolute left-3.5 top-3.5 text-brand-300 text-lg">language</span>
+                                                <input
+                                                    type="text"
+                                                    value={formData.website}
+                                                    onChange={e => setFormData({ ...formData, website: e.target.value })}
+                                                    className="w-full pl-10 pr-4 py-3.5 bg-white border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-brand-700 font-mono text-sm placeholder-brand-300 transition-all"
+                                                    placeholder="www.example.com"
+                                                />
                                             </div>
                                         </div>
+                                    </div>
+                                </section>
 
-                                        {/* Business Info */}
-                                        <div className="col-span-1 md:col-span-4 text-center md:text-left">
-                                            <h4 className="font-bold text-brand-900 text-lg font-serif mb-1 group-hover:text-accent transition-colors truncate">{card.name}</h4>
-                                            {card.additional_info?.tagline ? (
-                                                <p className="text-sm text-brand-500 italic line-clamp-1 opacity-80">{card.additional_info.tagline}</p>
-                                            ) : (
-                                                <p className="text-xs text-brand-300 line-clamp-1 italic">
-                                                    {card.additional_info?.products_sold || card.additional_info?.designation || Object.values(card.additional_info || {}).slice(0, 3).join(', ')}
-                                                </p>
-                                            )}
-                                        </div>
+                                {/* Section: Classification */}
+                                <section>
+                                    <div className="flex items-center gap-2 mb-6 text-brand-400 uppercase tracking-widest text-xs font-bold border-b border-brand-50 pb-2">
+                                        <span className="material-icons-outlined text-sm">category</span>
+                                        Classification & Source
+                                    </div>
 
-                                        {/* Category */}
-                                        <div className="col-span-1 md:col-span-2 flex justify-center md:justify-start">
-                                            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-bold bg-brand-50 text-brand-600 border border-brand-200 uppercase tracking-wider truncate max-w-full">
-                                                {card.category}
-                                            </span>
-                                        </div>
-
-                                        {/* Contact & Link */}
-                                        <div className="col-span-1 md:col-span-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                                            <div className="flex flex-col gap-1.5 min-w-0 w-full md:w-auto">
-                                                {card.contact && card.contact.split('|').slice(0, 2).map((part, i) => {
-                                                    let icon = 'horizontal_rule';
-                                                    let text = part.trim();
-                                                    if (part.includes('Ph:')) { icon = 'call'; text = part.replace('Ph:', '').trim(); }
-                                                    else if (part.includes('✉')) { icon = 'email'; text = part.replace('✉', '').trim(); }
-                                                    else if (part.includes('📍')) { icon = 'place'; text = part.replace('📍', '').trim(); }
-
-                                                    return (
-                                                        <div key={i} className="flex items-center gap-2 text-xs text-brand-500 justify-center md:justify-start">
-                                                            <span className="material-icons-outlined text-[12px] text-brand-300">{icon}</span>
-                                                            <span className="truncate max-w-[180px]">{text}</span>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-
-                                            {/* Link Button */}
-                                            {card.website ? (
-                                                <a
-                                                    href={card.website.startsWith('http') ? card.website : `https://${card.website}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    className="w-9 h-9 rounded-full bg-brand-50 hover:bg-accent hover:text-white flex items-center justify-center text-brand-400 transition-all flex-shrink-0 group/link border border-transparent hover:border-accent hover:shadow-lg hover:-translate-y-0.5"
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-brand-700 uppercase tracking-wider mb-2">Supplier Type</label>
+                                            <div className="relative">
+                                                <select
+                                                    value={formData.supplier_type}
+                                                    onChange={e => setFormData({ ...formData, supplier_type: e.target.value })}
+                                                    className="w-full p-3.5 bg-white border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-brand-700 font-medium appearance-none cursor-pointer hover:bg-brand-50/50 transition-colors"
                                                 >
-                                                    <span className="material-icons-outlined text-sm group-hover/link:rotate-45 transition-transform">launch</span>
-                                                </a>
-                                            ) : (
-                                                <div className="w-9 h-9"></div>
-                                            )}
+                                                    <option value="Unknown">Select Type...</option>
+                                                    <option value="Manufacturer">Manufacturer</option>
+                                                    <option value="Wholesaler">Wholesaler</option>
+                                                    <option value="Retailer">Retailer</option>
+                                                    <option value="Service Provider">Service Provider</option>
+                                                    <option value="Artisan">Artisan/Creator</option>
+                                                </select>
+                                                <span className="material-icons-outlined absolute right-3.5 top-3.5 text-brand-400 pointer-events-none">expand_more</span>
+                                            </div>
                                         </div>
 
-                                        <div className="hidden md:flex col-span-1 justify-end">
-                                            <span className="material-icons-outlined text-brand-200 group-hover:text-accent transition-colors text-xl transform group-hover:translate-x-1 duration-300">chevron_right</span>
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-brand-700 uppercase tracking-wider mb-2">Source / Origin</label>
+                                            <div className="relative">
+                                                <span className="material-icons-outlined absolute left-3.5 top-3.5 text-brand-300 text-lg">place</span>
+                                                <input
+                                                    type="text"
+                                                    value={formData.source_origin}
+                                                    onChange={e => setFormData({ ...formData, source_origin: e.target.value })}
+                                                    className="w-full pl-10 pr-4 py-3.5 bg-white border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-brand-700 font-medium placeholder-brand-300 transition-all"
+                                                    placeholder="e.g. Expo 2024, Referral"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
-                                ))}
+                                </section>
 
-                                {filteredCards.length === 0 && (
-                                    <div className="p-16 text-center bg-white rounded-2xl border border-brand-100 border-dashed">
-                                        <div className="w-20 h-20 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                                            <span className="material-icons-outlined text-4xl text-brand-300">filter_list_off</span>
-                                        </div>
-                                        <h3 className="text-xl font-serif font-bold text-brand-800 mb-2">No Vendors Found</h3>
-                                        <p className="text-brand-400">Try adjusting your search filters.</p>
+                                {/* Section: Contact Info */}
+                                <section>
+                                    <div className="flex items-center gap-2 mb-6 text-brand-400 uppercase tracking-widest text-xs font-bold border-b border-brand-50 pb-2">
+                                        <span className="material-icons-outlined text-sm">contacts</span>
+                                        Contact Information
                                     </div>
-                                )}
+
+                                    <div className="grid grid-cols-1 gap-4">
+                                        {/* Phone Numbers */}
+                                        <div>
+                                            <label className="block text-xs font-bold text-brand-700 uppercase tracking-wider mb-2">Phone Numbers</label>
+                                            <div className="space-y-3">
+                                                {formData.phone.split(',').map((p, i) => (
+                                                    <div key={i} className="flex gap-3">
+                                                        <div className="relative flex-1">
+                                                            <span className="material-icons-outlined absolute left-3.5 top-3.5 text-brand-300 text-lg">call</span>
+                                                            <input
+                                                                type="text"
+                                                                value={p.trim()}
+                                                                onChange={e => {
+                                                                    const parts = formData.phone.split(',');
+                                                                    parts[i] = e.target.value;
+                                                                    setFormData({ ...formData, phone: parts.join(',') });
+                                                                }}
+                                                                className="w-full pl-10 pr-4 py-3 bg-white border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-brand-700 font-medium"
+                                                                placeholder="+91..."
+                                                            />
+                                                        </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                const parts = formData.phone.split(',');
+                                                                parts.splice(i, 1);
+                                                                setFormData({ ...formData, phone: parts.join(',') });
+                                                            }}
+                                                            className="p-3 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                                        >
+                                                            <span className="material-icons-outlined">delete</span>
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <button
+                                                    onClick={() => setFormData({ ...formData, phone: formData.phone + (formData.phone ? ', ' : '') + '' })}
+                                                    className="text-xs font-bold text-accent hover:text-accent-dark flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-accent/5 w-fit transition-colors"
+                                                >
+                                                    <span className="material-icons-outlined text-sm">add_circle</span>
+                                                    Add Another Phone
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Emails */}
+                                        <div className="mt-2">
+                                            <label className="block text-xs font-bold text-brand-700 uppercase tracking-wider mb-2">Email Addresses</label>
+                                            <div className="space-y-3">
+                                                {formData.email.split(',').map((email, i) => (
+                                                    <div key={i} className="flex gap-3">
+                                                        <div className="relative flex-1">
+                                                            <span className="material-icons-outlined absolute left-3.5 top-3.5 text-brand-300 text-lg">email</span>
+                                                            <input
+                                                                type="email"
+                                                                value={email.trim()}
+                                                                onChange={e => {
+                                                                    const parts = formData.email.split(',');
+                                                                    parts[i] = e.target.value;
+                                                                    setFormData({ ...formData, email: parts.join(',') });
+                                                                }}
+                                                                className="w-full pl-10 pr-4 py-3 bg-white border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-brand-700 font-medium"
+                                                                placeholder="name@example.com"
+                                                            />
+                                                        </div>
+                                                        <button
+                                                            onClick={() => {
+                                                                const parts = formData.email.split(',');
+                                                                parts.splice(i, 1);
+                                                                setFormData({ ...formData, email: parts.join(',') });
+                                                            }}
+                                                            className="p-3 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                                        >
+                                                            <span className="material-icons-outlined">delete</span>
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <button
+                                                    onClick={() => setFormData({ ...formData, email: formData.email + (formData.email ? ', ' : '') + '' })}
+                                                    className="text-xs font-bold text-accent hover:text-accent-dark flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-accent/5 w-fit transition-colors"
+                                                >
+                                                    <span className="material-icons-outlined text-sm">add_circle</span>
+                                                    Add Another Email
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Address */}
+                                        <div className="mt-2">
+                                            <label className="block text-xs font-bold text-brand-700 uppercase tracking-wider mb-2">Office Address</label>
+                                            <textarea
+                                                value={formData.address}
+                                                onChange={e => setFormData({ ...formData, address: e.target.value })}
+                                                className="w-full p-3.5 bg-white border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-brand-700 font-medium placeholder-brand-300 min-h-[80px]"
+                                                placeholder="e.g. 123 Business Park, New Delhi"
+                                            />
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {/* Section: Offerings */}
+                                <section>
+                                    <div className="flex items-center gap-2 mb-6 text-brand-400 uppercase tracking-widest text-xs font-bold border-b border-brand-50 pb-2">
+                                        <span className="material-icons-outlined text-sm">inventory_2</span>
+                                        Offerings & Branding
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-xs font-bold text-brand-700 uppercase tracking-wider mb-2">Products & Services</label>
+                                            <textarea
+                                                value={formData.products}
+                                                onChange={e => setFormData({ ...formData, products: e.target.value })}
+                                                className="w-full p-3.5 bg-white border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-brand-700 font-medium h-24 placeholder-brand-300"
+                                                placeholder="List key items, services, or specializations..."
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div className="col-span-2">
+                                                <label className="block text-xs font-bold text-brand-700 uppercase tracking-wider mb-2">Tagline</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.tagline}
+                                                    onChange={e => setFormData({ ...formData, tagline: e.target.value })}
+                                                    className="w-full p-3.5 bg-white border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-brand-700 italic placeholder-brand-300"
+                                                    placeholder="e.g. 'Quality you can trust'"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+
+                            {/* Modal Footer (Actions) */}
+                            <div className="px-8 py-5 border-t border-brand-100 bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.02)] flex items-center justify-between z-20 gap-4">
+                                <div className="flex items-center gap-4 flex-1">
+                                    {formData.id && (
+                                        <button
+                                            onClick={() => setShowDeleteConfirm(true)}
+                                            className="flex items-center gap-2 px-4 py-2.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all text-sm font-bold whitespace-nowrap"
+                                        >
+                                            <span className="material-icons-outlined text-lg">delete_outline</span>
+                                            <span>Delete Vendor</span>
+                                        </button>
+                                    )}
+
+                                    {/* Status Message */}
+                                    {uploadStatus && (
+                                        <div className={`text-xs font-bold px-3 py-1.5 rounded-lg animate-pulse flex items-center gap-2 ${statusType === 'error' ? 'bg-red-50 text-red-600' :
+                                            statusType === 'success' ? 'bg-green-50 text-green-600' :
+                                                'bg-brand-50 text-brand-500'
+                                            }`}>
+                                            <span className="material-icons-outlined text-sm">
+                                                {statusType === 'error' ? 'error' : statusType === 'success' ? 'check_circle' : 'info'}
+                                            </span>
+                                            {uploadStatus}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={() => setShowReviewModal(false)}
+                                        className="px-6 py-3 font-bold text-brand-600 hover:text-brand-900 hover:bg-brand-50 rounded-xl transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSaveVendor}
+                                        disabled={loading}
+                                        className="px-8 py-3 bg-gradient-to-r from-accent to-accent-dark hover:from-accent-dark hover:to-accent text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:shadow-accent/20 transition-all transform active:scale-95 flex items-center gap-2"
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                <span>Saving...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span>Save Changes</span>
+                                                <span className="material-icons-outlined text-sm">check</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            )}
 
-                {/* Review Modal */}
-                {showReviewModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-900/40 backdrop-blur-sm p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-brand-900/40 backdrop-blur-[2px] flex items-center justify-center z-[60] p-4">
+                    <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full border border-brand-100 animate-in fade-in zoom-in duration-200">
+                        <h3 className="text-xl font-bold text-brand-900 mb-2">Delete Vendor?</h3>
 
-                            {/* Image Preview Side */}
-                            <div className="md:w-1/3 bg-brand-50 p-6 flex flex-col items-center justify-center border-r border-brand-100">
-                                <h3 className="text-brand-800 font-serif font-bold mb-4">Original Scan</h3>
-                                <div className="rounded-xl overflow-hidden shadow-lg border border-brand-200 w-full">
-                                    <img
-                                        src={`${API_BASE_URL}/${formData.image_path}`}
-                                        alt="Scan Preview"
-                                        className="w-full h-auto object-contain"
-                                    />
-                                </div>
-                            </div>
+                        <p className="text-brand-600 text-sm mb-6">
+                            Permanently remove <span className="font-bold">{formData.name}</span>? This cannot be undone.
+                        </p>
 
-                            {/* Form Side */}
-                            <div className="md:w-2/3 p-8 overflow-y-auto">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-2xl font-serif font-bold text-brand-900">Review & Edit Details</h2>
-                                    <button
-                                        onClick={() => setShowReviewModal(false)}
-                                        className="text-brand-400 hover:text-brand-600"
-                                    >
-                                        <span className="material-icons-outlined">close</span>
-                                    </button>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="col-span-2 border-b border-brand-100 pb-2 mb-2">
-                                        <p className="text-brand-400 text-xs font-bold mb-2 uppercase">Business Information</p>
-                                    </div>
-
-                                    <div className="col-span-2 md:col-span-1">
-                                        <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-1">Business Name *</label>
-                                        <input
-                                            type="text"
-                                            value={formData.name}
-                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                            className="w-full p-3 bg-brand-50 border border-brand-200 rounded-lg focus:outline-none focus:border-accent font-serif font-bold text-brand-800 placeholder-brand-300"
-                                            placeholder="e.g. Acme Corp"
-                                        />
-                                    </div>
-
-                                    <div className="col-span-1">
-                                        <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-1">Category</label>
-                                        <input
-                                            type="text"
-                                            value={formData.category}
-                                            onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                            className="w-full p-3 bg-white border border-brand-200 rounded-lg focus:outline-none focus:border-accent text-brand-700 placeholder-brand-300"
-                                            placeholder="e.g. Catering, Logistics"
-                                        />
-                                    </div>
-
-                                    <div className="col-span-1">
-                                        <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-1">Designation</label>
-                                        <input
-                                            type="text"
-                                            value={formData.designation}
-                                            onChange={e => setFormData({ ...formData, designation: e.target.value })}
-                                            className="w-full p-3 bg-white border border-brand-200 rounded-lg focus:outline-none focus:border-accent text-brand-700 placeholder-brand-300"
-                                            placeholder="e.g. Manager"
-                                        />
-                                    </div>
-
-                                    <div className="col-span-1">
-                                        <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-1">Website</label>
-                                        <input
-                                            type="text"
-                                            value={formData.website}
-                                            onChange={e => setFormData({ ...formData, website: e.target.value })}
-                                            className="w-full p-3 bg-white border border-brand-200 rounded-lg focus:outline-none focus:border-accent text-brand-700 placeholder-brand-300 font-mono text-sm"
-                                            placeholder="www.example.com"
-                                        />
-                                    </div>
-
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-1">Tagline</label>
-                                        <input
-                                            type="text"
-                                            value={formData.tagline}
-                                            onChange={e => setFormData({ ...formData, tagline: e.target.value })}
-                                            className="w-full p-3 bg-white border border-brand-200 rounded-lg focus:outline-none focus:border-accent text-brand-700 placeholder-brand-300 italic"
-                                            placeholder="e.g. Quality you can trust..."
-                                        />
-                                    </div>
-
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-1">Products & Services Offered</label>
-                                        <textarea
-                                            value={formData.products}
-                                            onChange={e => setFormData({ ...formData, products: e.target.value })}
-                                            className="w-full p-3 bg-white border border-brand-200 rounded-lg focus:outline-none focus:border-accent text-brand-700 h-24 placeholder-brand-300"
-                                            placeholder="List the key items or services this vendor provides..."
-                                        />
-                                    </div>
-
-                                    <div className="col-span-2 border-b border-brand-100 pb-2 mb-2 mt-2">
-                                        <p className="text-brand-400 text-xs font-bold mb-2 uppercase">Contact Information</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-1">Phone Numbers</label>
-                                        <div className="space-y-2">
-                                            {formData.phone.split(',').map((p, i) => (
-                                                <div key={i} className="flex gap-2 items-center">
-                                                    <input
-                                                        type="text"
-                                                        value={p.trim()}
-                                                        onChange={e => {
-                                                            const parts = formData.phone.split(',');
-                                                            parts[i] = e.target.value;
-                                                            setFormData({ ...formData, phone: parts.join(',') });
-                                                        }}
-                                                        className="w-full p-3 bg-white border border-brand-200 rounded-lg focus:outline-none focus:border-accent text-brand-700"
-                                                        placeholder="+91..."
-                                                    />
-                                                    <button
-                                                        onClick={() => {
-                                                            const parts = formData.phone.split(',');
-                                                            parts.splice(i, 1);
-                                                            setFormData({ ...formData, phone: parts.join(',') });
-                                                        }}
-                                                        className="p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Remove"
-                                                    >
-                                                        <span className="material-icons-outlined text-lg">delete</span>
-                                                    </button>
-                                                </div>
-                                            ))}
-                                            <button
-                                                onClick={() => setFormData({ ...formData, phone: formData.phone + (formData.phone ? ', ' : '') + '' })}
-                                                className="text-xs font-bold text-accent hover:text-accent/80 flex items-center gap-1 mt-1"
-                                            >
-                                                <span className="material-icons-outlined text-sm">add</span>
-                                                Add Phone
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-1">Email Addresses</label>
-                                        <div className="space-y-2">
-                                            {formData.email.split(',').map((email, i) => (
-                                                <div key={i} className="flex gap-2 items-center">
-                                                    <input
-                                                        type="email"
-                                                        value={email.trim()}
-                                                        onChange={e => {
-                                                            const parts = formData.email.split(',');
-                                                            parts[i] = e.target.value;
-                                                            setFormData({ ...formData, email: parts.join(',') });
-                                                        }}
-                                                        className="w-full p-3 bg-white border border-brand-200 rounded-lg focus:outline-none focus:border-accent text-brand-700"
-                                                        placeholder="name@example.com"
-                                                    />
-                                                    <button
-                                                        onClick={() => {
-                                                            const parts = formData.email.split(',');
-                                                            parts.splice(i, 1);
-                                                            setFormData({ ...formData, email: parts.join(',') });
-                                                        }}
-                                                        className="p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Remove"
-                                                    >
-                                                        <span className="material-icons-outlined text-lg">delete</span>
-                                                    </button>
-                                                </div>
-                                            ))}
-                                            <button
-                                                onClick={() => setFormData({ ...formData, email: formData.email + (formData.email ? ', ' : '') + '' })}
-                                                className="text-xs font-bold text-accent hover:text-accent/80 flex items-center gap-1 mt-1"
-                                            >
-                                                <span className="material-icons-outlined text-sm">add</span>
-                                                Add Email
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-1">Address</label>
-                                        <input
-                                            type="text"
-                                            value={formData.address}
-                                            onChange={e => setFormData({ ...formData, address: e.target.value })}
-                                            className="w-full p-3 bg-white border border-brand-200 rounded-lg focus:outline-none focus:border-accent text-brand-700 placeholder-brand-300"
-                                            placeholder="e.g. 123 Business Park, New Delhi"
-                                        />
-                                    </div>
-
-                                    <div className="col-span-2 border-b border-brand-100 pb-2 mb-2 mt-2">
-                                        <p className="text-brand-400 text-xs font-bold mb-2 uppercase">Additional Details & Branding</p>
-                                    </div>
-
-                                    <div className="col-span-2">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest">Pricing Guide (Scraped)</label>
-                                            {formData.scrape_status && formData.scrape_status !== 'success' && (
-                                                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${formData.scrape_status.includes('no_website') ? 'bg-gray-100 text-gray-500' :
-                                                    formData.scrape_status.includes('no_data') ? 'bg-orange-100 text-orange-600' :
-                                                        'bg-red-50 text-red-500'
-                                                    }`}>
-                                                    {formData.scrape_status === 'no_website' ? 'No Website Detected' :
-                                                        formData.scrape_status === 'no_data_found' ? 'No Prices Found' :
-                                                            'Site Unreachable'}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            {(formData.pricing_guide || []).map((item, index) => (
-                                                <div key={index} className="flex gap-2 items-center">
-                                                    <input
-                                                        type="text"
-                                                        value={item.item || ''}
-                                                        onChange={(e) => updatePricingItem(index, 'item', e.target.value)}
-                                                        className="flex-1 p-3 bg-white border border-brand-200 rounded-lg focus:outline-none focus:border-accent text-brand-700 placeholder-brand-300"
-                                                        placeholder="Item Name"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={item.price || ''}
-                                                        onChange={(e) => updatePricingItem(index, 'price', e.target.value)}
-                                                        className="w-1/3 p-3 bg-white border border-brand-200 rounded-lg focus:outline-none focus:border-accent text-brand-700 placeholder-brand-300"
-                                                        placeholder="Price"
-                                                    />
-                                                    <button
-                                                        onClick={() => removePricingItem(index)}
-                                                        className="p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Remove Item"
-                                                    >
-                                                        <span className="material-icons-outlined">delete</span>
-                                                    </button>
-                                                </div>
-                                            ))}
-
-                                            <button
-                                                onClick={addPricingItem}
-                                                className="text-xs font-bold text-accent hover:text-accent/80 flex items-center gap-1 mt-1"
-                                            >
-                                                <span className="material-icons-outlined text-sm">add_circle</span>
-                                                Add Price Item
-                                            </button>
-                                        </div>
-
-                                        {formData.scrape_status && formData.scrape_status !== 'success' && formData.scrape_status !== 'no_website' && (
-                                            <div className="mt-4 p-4 bg-orange-50 border border-orange-100 rounded-xl flex items-start gap-3 animate-fade-in shadow-sm">
-                                                <span className="material-icons-outlined text-orange-400 text-xl mt-0.5">info</span>
-                                                <div>
-                                                    <p className="text-sm font-bold text-orange-800">We couldn't read prices automatically</p>
-                                                    <p className="text-xs text-orange-700 mt-1 leading-relaxed">
-                                                        The website might be blocking us or structured differently. Please verify the link or add product details manually.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-brand-500 uppercase tracking-widest mb-1">Social Media Handles</label>
-                                        <input
-                                            type="text"
-                                            value={formData.social_media}
-                                            onChange={e => setFormData({ ...formData, social_media: e.target.value })}
-                                            className="w-full p-3 bg-white border border-brand-200 rounded-lg focus:outline-none focus:border-accent text-brand-700 placeholder-brand-300"
-                                            placeholder="e.g. @storytellerz (Instagram), /storytellerz (LinkedIn)"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="mt-8 flex justify-between items-center border-t border-brand-100 pt-6">
-                                    {formData.id ? (
-                                        <button
-                                            onClick={handleDeleteVendor}
-                                            className="text-red-500 hover:text-red-700 font-bold text-sm flex items-center gap-2 transition-colors px-4 py-2 hover:bg-red-50 rounded-lg group"
-                                        >
-                                            <span className="material-icons-outlined text-lg group-hover:scale-110 transition-transform">delete_outline</span>
-                                            Delete Vendor
-                                        </button>
-                                    ) : (
-                                        <div></div>
-                                    )}
-                                    <div className="flex gap-4">
-                                        <button
-                                            onClick={() => setShowReviewModal(false)}
-                                            className="px-6 py-3 font-bold text-brand-500 hover:text-brand-800 transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={handleSaveVendor}
-                                            disabled={loading}
-                                            className="px-8 py-3 bg-accent text-white font-bold rounded-xl shadow-lg hover:bg-accent/90 hover:shadow-xl transition-all transform active:scale-95 flex items-center gap-2"
-                                        >
-                                            {loading ? 'Saving...' : 'Save Vendor'}
-                                            {!loading && <span className="material-icons-outlined text-sm">check</span>}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="px-4 py-2 text-sm font-bold text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-sm hover:shadow transition-all"
+                            >
+                                Delete
+                            </button>
                         </div>
                     </div>
-                )}
-
-                {/* Delete Confirmation Modal */}
-                {showDeleteConfirm && (
-                    <div className="fixed inset-0 bg-brand-900/40 backdrop-blur-[2px] flex items-center justify-center z-[60] p-4">
-                        <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full border border-brand-100 animate-in fade-in zoom-in duration-200">
-                            <h3 className="text-xl font-bold text-brand-900 mb-2">Delete Vendor?</h3>
-
-                            <p className="text-brand-600 text-sm mb-6">
-                                Permanently remove <span className="font-bold">{formData.name}</span>? This cannot be undone.
-                            </p>
-
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowDeleteConfirm(false)}
-                                    className="px-4 py-2 text-sm font-bold text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={confirmDelete}
-                                    className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-sm hover:shadow transition-all"
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
+                </div>
+            )}
+        </div >
     );
 };
 

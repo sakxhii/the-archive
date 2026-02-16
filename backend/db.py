@@ -50,6 +50,7 @@ def update_card(card_id, card_data):
         WHERE id = ?
     ''', (
         card_data.get('name'),
+        card_data.get('contact'),
         card_data.get('category'),
         card_data.get('website'),
         json.dumps(card_data.get('additional_info', {})),
