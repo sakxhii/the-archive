@@ -31,51 +31,69 @@ const CustomerSearch = () => {
     };
 
     return (
-        <div className={`bg-brand-50 pt-20 ${searched ? 'min-h-screen' : 'h-screen overflow-hidden'}`}>
+        <div className={`bg-gradient-to-br from-brand-50 via-white to-primary-50/30 pt-10 ${searched ? 'min-h-screen' : 'h-screen overflow-hidden'}`}>
 
             {/* Hero Section */}
-            <div className={`transition-all duration-700 ${searched ? 'py-16' : 'min-h-[calc(100vh-5rem)] flex items-center'} bg-white border-b border-brand-100 flex flex-col justify-center`}>
-                <div className="container mx-auto max-w-4xl text-center px-4">
-                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-brand-900 mb-6 tracking-tight leading-snug">
-                        The Archive: Your Rolodex for <span className="text-accent underline decoration-4 decoration-accent/30 underline-offset-4">Meaningful Gifting.</span>
+            <div className={`relative transition-all duration-700 ${searched ? 'py-20' : 'min-h-[calc(100vh-5rem)] flex items-center'} bg-gradient-to-br from-brand-900 via-brand-800 to-primary-900 flex flex-col justify-center overflow-hidden`}>
+                {/* Decorative Background Elements */}
+                <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-10 right-10 w-96 h-96 bg-accent rounded-full blur-3xl animate-pulse"></div>
+                    <div className="absolute bottom-10 left-10 w-96 h-96 bg-primary-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+                </div>
+
+                <div className="container mx-auto max-w-5xl text-center px-6 relative z-10">
+                    {/* Badge */}
+                    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-5 py-2.5 rounded-full mb-8 border border-white/20 shadow-lg">
+                        <span className="material-icons-outlined text-accent text-sm">auto_awesome</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-white">Discover Perfect Gifts</span>
+                    </div>
+
+                    <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-6 tracking-tight leading-tight">
+                        The Archive: Your Rolodex for <br />
+                        <span className="bg-gradient-to-r from-accent via-accent-light to-accent bg-clip-text text-transparent drop-shadow-lg">Meaningful Gifting.</span>
                     </h1>
-                    <p className="text-brand-500 font-sans text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
+                    <p className="text-xl md:text-2xl text-brand-100 font-light mb-12 max-w-3xl mx-auto leading-relaxed">
                         Seamlessly find verified vendors from your personal network or discover global trends. Turn business cards into business opportunities.
                     </p>
 
                     {/* Search Bar */}
-                    <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto shadow-2xl rounded-full transition-transform hover:scale-[1.01] duration-300">
-                        <div className="absolute inset-0 bg-brand-200 rounded-full blur-md opacity-50 -z-10"></div>
-                        <div className="relative flex items-center bg-white rounded-full border border-brand-100 p-2 overflow-hidden shadow-sm">
-                            <span className="material-icons-outlined text-brand-300 pl-4 text-2xl select-none">search</span>
+                    <form onSubmit={handleSearch} className="relative max-w-3xl mx-auto mb-8">
+                        {/* Glow Effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-accent/50 via-primary-500/50 to-accent/50 rounded-2xl blur-2xl opacity-40 group-hover:opacity-60 transition-opacity"></div>
+
+                        <div className="relative flex items-center bg-white/95 backdrop-blur-md rounded-2xl border-2 border-white/50 p-2 overflow-hidden shadow-2xl hover:shadow-accent/20 transition-all">
+                            <span className="material-icons-outlined text-brand-400 pl-5 text-3xl select-none">search</span>
                             <input
                                 type="text"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 placeholder="Search for 'Eco-friendly hampers', 'Printing vendors', or 'Diwali gifts'..."
-                                className="flex-1 py-4 px-4 text-brand-800 placeholder-brand-300 focus:outline-none text-lg font-medium bg-transparent"
+                                className="flex-1 py-5 px-5 text-brand-900 placeholder-brand-400 focus:outline-none text-lg font-medium bg-transparent"
                             />
                             {query && (
                                 <button
                                     type="button"
-                                    onClick={() => { setQuery(''); setResults({ internal: [], web: [] }); setSearched(false); }}
-                                    className="p-3 text-brand-300 hover:text-red-500 transition-colors rounded-full hover:bg-red-50 mr-1"
+                                    onClick={() => { setQuery(''); setResults({ internal: [], web_products: [], web_vendors: [] }); setSearched(false); }}
+                                    className="p-3 text-brand-400 hover:text-red-500 transition-all rounded-xl hover:bg-red-50 mr-2 group"
                                 >
-                                    <span className="material-icons-outlined text-xl">close</span>
+                                    <span className="material-icons-outlined text-2xl group-hover:rotate-90 transition-transform">close</span>
                                 </button>
                             )}
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="bg-brand-800 text-white px-8 py-3 rounded-full font-semibold hover:bg-brand-700 transition-all active:scale-95 shadow-md flex items-center gap-2 whitespace-nowrap"
+                                className="bg-gradient-to-r from-brand-900 to-brand-800 hover:from-brand-800 hover:to-brand-700 text-white px-10 py-4 rounded-xl font-bold transition-all active:scale-95 shadow-lg hover:shadow-xl flex items-center gap-3 whitespace-nowrap disabled:opacity-50"
                             >
                                 {loading ? (
                                     <>
                                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        <span>Looking...</span>
+                                        <span>Searching...</span>
                                     </>
                                 ) : (
-                                    'Discover'
+                                    <>
+                                        <span>Discover</span>
+                                        <span className="material-icons-outlined">arrow_forward</span>
+                                    </>
                                 )}
                             </button>
                         </div>
@@ -83,13 +101,17 @@ const CustomerSearch = () => {
 
                     {/* Prompt Hints */}
                     {!searched && (
-                        <div className="mt-8 flex flex-wrap justify-center gap-3 text-sm text-brand-400 font-medium">
-                            <span>Try:</span>
-                            <button onClick={() => setQuery("Custom Diaries")} className="hover:text-accent transition underline decoration-dashed decoration-brand-200 underline-offset-4">"Custom Diaries"</button>
-                            <span className="text-brand-200">•</span>
-                            <button onClick={() => setQuery("Gourmet Hampers")} className="hover:text-accent transition underline decoration-dashed decoration-brand-200 underline-offset-4">"Gourmet Hampers"</button>
-                            <span className="text-brand-200">•</span>
-                            <button onClick={() => setQuery("Sustainable Tech")} className="hover:text-accent transition underline decoration-dashed decoration-brand-200 underline-offset-4">"Sustainable Tech"</button>
+                        <div className="flex flex-wrap justify-center gap-4 text-sm font-medium">
+                            <span className="text-brand-200">Try:</span>
+                            {['Custom Diaries', 'Gourmet Hampers', 'Sustainable Tech'].map((hint, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setQuery(hint)}
+                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/40 rounded-xl text-white transition-all hover:scale-105 shadow-lg"
+                                >
+                                    "{hint}"
+                                </button>
+                            ))}
                         </div>
                     )}
                 </div>
@@ -103,32 +125,32 @@ const CustomerSearch = () => {
 
                         {/* 1. Internal Database Results */}
                         <section>
-                            <div className="flex items-center gap-4 mb-10 pb-4 border-b border-brand-100">
-                                <div className="p-3 bg-brand-50 rounded-xl text-brand-600 shadow-sm border border-brand-100">
-                                    <span className="material-icons-outlined text-2xl">verified_user</span>
+                            <div className="flex items-center gap-4 mb-10 pb-6 border-b-2 border-brand-200">
+                                <div className="p-4 bg-gradient-to-br from-brand-100 to-brand-50 rounded-2xl text-brand-700 shadow-lg border-2 border-brand-200">
+                                    <span className="material-icons-outlined text-3xl">verified_user</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold font-serif text-brand-900 leading-tight">Vendor Network</h2>
-                                    <p className="text-brand-400 text-sm font-medium tracking-wide uppercase">Exclusive Partners & Local Artisans</p>
+                                    <h2 className="text-3xl font-bold font-serif text-brand-900 leading-tight">Vendor Network</h2>
+                                    <p className="text-brand-500 text-sm font-semibold tracking-wide uppercase">Exclusive Partners & Local Artisans</p>
                                 </div>
                             </div>
 
                             {results.internal.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                                     {results.internal.map((item, idx) => (
-                                        <div key={idx} className="group bg-white rounded-xl overflow-hidden border border-brand-100 hover:border-brand-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
+                                        <div key={idx} className="group bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden border-2 border-brand-100 hover:border-accent/40 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 flex flex-col h-full">
                                             {/* Image Area */}
-                                            <div className="relative aspect-[4/3] bg-brand-50 overflow-hidden border-b border-brand-50">
+                                            <div className="relative aspect-[4/3] bg-gradient-to-br from-brand-50 to-brand-100 overflow-hidden border-b-2 border-brand-100">
                                                 {item.image_url && !item.image_url.includes('None') ? (
-                                                    <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                    <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                                 ) : (
-                                                    <div className="flex flex-col items-center justify-center h-full text-brand-200">
-                                                        <span className="material-icons-outlined text-5xl mb-2">image_not_supported</span>
-                                                        <span className="text-xs font-medium uppercase tracking-widest">No Image</span>
+                                                    <div className="flex flex-col items-center justify-center h-full text-brand-300">
+                                                        <span className="material-icons-outlined text-6xl mb-3">image_not_supported</span>
+                                                        <span className="text-xs font-bold uppercase tracking-widest">No Image</span>
                                                     </div>
                                                 )}
-                                                <div className="absolute top-3 left-3 bg-white/95 backdrop-blur text-brand-800 text-[10px] font-bold px-3 py-1.5 rounded-md shadow-sm border border-brand-100 uppercase tracking-widest flex items-center gap-1">
-                                                    <span className="material-icons-outlined text-xs text-accent">verified</span>
+                                                <div className="absolute top-3 left-3 bg-white/95 backdrop-blur text-brand-800 text-xs font-bold px-4 py-2 rounded-xl shadow-lg border-2 border-accent/30 uppercase tracking-widest flex items-center gap-2">
+                                                    <span className="material-icons-outlined text-sm text-accent">verified</span>
                                                     Verified
                                                 </div>
                                             </div>
@@ -143,7 +165,7 @@ const CustomerSearch = () => {
                                                     href={item.link}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="w-full block text-center bg-brand-50 hover:bg-brand-100 text-brand-800 font-bold py-3 rounded-xl transition-all border border-brand-200 hover:border-brand-300 text-xs uppercase tracking-widest group-hover:shadow-md"
+                                                    className="w-full block text-center bg-gradient-to-r from-brand-900 to-brand-800 hover:from-brand-800 hover:to-brand-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-xl text-sm uppercase tracking-wider group-hover:-translate-y-0.5"
                                                 >
                                                     Contact Vendor
                                                 </a>
@@ -162,25 +184,25 @@ const CustomerSearch = () => {
 
                         {/* 2. Global Vendor Search (NEW) */}
                         <section>
-                            <div className="flex items-center gap-4 mb-10 pb-4 border-b border-brand-100">
-                                <div className="p-3 bg-purple-50 rounded-xl text-purple-600 shadow-sm border border-purple-100">
-                                    <span className="material-icons-outlined text-2xl">travel_explore</span>
+                            <div className="flex items-center gap-4 mb-10 pb-6 border-b-2 border-brand-200">
+                                <div className="p-4 bg-gradient-to-br from-primary-100 to-primary-50 rounded-2xl text-primary-700 shadow-lg border-2 border-primary-200">
+                                    <span className="material-icons-outlined text-3xl">travel_explore</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold font-serif text-brand-900 leading-tight">Global Suppliers</h2>
-                                    <p className="text-brand-400 text-sm font-medium tracking-wide uppercase">Top International Brands & Manufacturers</p>
+                                    <h2 className="text-3xl font-bold font-serif text-brand-900 leading-tight">Global Suppliers</h2>
+                                    <p className="text-brand-500 text-sm font-semibold tracking-wide uppercase">Top International Brands & Manufacturers</p>
                                 </div>
                             </div>
 
                             {results.web_vendors.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {results.web_vendors.map((item, idx) => (
-                                        <div key={idx} className="bg-white rounded-xl p-6 border border-brand-100 hover:border-purple-200 hover:shadow-md transition-all group flex flex-col h-full">
+                                        <div key={idx} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-brand-100 hover:border-primary-300 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group flex flex-col h-full">
                                             <div className="flex items-start justify-between mb-4">
-                                                <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                                                    <span className="material-icons-outlined">business</span>
+                                                <div className="w-14 h-14 bg-gradient-to-br from-primary-100 to-primary-50 rounded-2xl flex items-center justify-center text-primary-600 group-hover:from-primary-600 group-hover:to-primary-700 group-hover:text-white transition-all shadow-lg">
+                                                    <span className="material-icons-outlined text-2xl">business</span>
                                                 </div>
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-brand-300 bg-brand-50 px-2 py-1 rounded">Global</span>
+                                                <span className="text-xs font-bold uppercase tracking-widest text-primary-600 bg-primary-50 px-3 py-1.5 rounded-lg border border-primary-200">Global</span>
                                             </div>
 
                                             <h3 className="font-bold text-brand-800 text-lg mb-2">{item.title}</h3>
@@ -190,9 +212,9 @@ const CustomerSearch = () => {
                                                 href={item.link}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="mt-auto text-purple-600 text-sm font-bold flex items-center gap-2 hover:gap-3 transition-all"
+                                                className="mt-auto text-primary-600 text-sm font-bold flex items-center gap-2 hover:gap-4 transition-all group-hover:text-primary-700"
                                             >
-                                                Visit Website <span className="material-icons-outlined text-sm">arrow_forward</span>
+                                                Visit Website <span className="material-icons-outlined text-lg">arrow_forward</span>
                                             </a>
                                         </div>
                                     ))}
@@ -207,22 +229,22 @@ const CustomerSearch = () => {
 
                         {/* 3. Web Search Results (Products) */}
                         <section>
-                            <div className="flex items-center gap-4 mb-10 pb-4 border-b border-brand-100">
-                                <div className="p-3 bg-accent/10 rounded-xl text-accent shadow-sm border border-accent/20">
-                                    <span className="material-icons-outlined text-2xl">public</span>
+                            <div className="flex items-center gap-4 mb-10 pb-6 border-b-2 border-brand-200">
+                                <div className="p-4 bg-gradient-to-br from-accent/20 to-accent/10 rounded-2xl text-accent-dark shadow-lg border-2 border-accent/30">
+                                    <span className="material-icons-outlined text-3xl">public</span>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold font-serif text-brand-900 leading-tight">Global Ideas</h2>
-                                    <p className="text-brand-400 text-sm font-medium tracking-wide uppercase">Trending Online Suggestions</p>
+                                    <h2 className="text-3xl font-bold font-serif text-brand-900 leading-tight">Global Ideas</h2>
+                                    <p className="text-brand-500 text-sm font-semibold tracking-wide uppercase">Trending Online Suggestions</p>
                                 </div>
                             </div>
 
                             {results.web_products.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                     {results.web_products.map((item, idx) => (
-                                        <div key={idx} className="bg-white rounded-xl shadow-sm border border-brand-100 p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full relative overflow-hidden group hover:border-accent/30">
+                                        <div key={idx} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border-2 border-brand-100 p-6 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 flex flex-col h-full relative overflow-hidden group hover:border-accent/40">
                                             {/* Accent Bar */}
-                                            <div className="absolute top-0 left-0 w-1.5 h-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                            <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-accent via-accent-dark to-accent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
                                             <div className="pl-4 flex-1 flex flex-col relative z-10">
                                                 <div className="flex justify-between items-start mb-3 gap-4">

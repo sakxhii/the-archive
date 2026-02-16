@@ -1,5 +1,4 @@
-
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -7,13 +6,19 @@ import shutil
 import os
 import uuid
 import json
-from typing import List
+from typing import List, Optional
+from PIL import Image
 
 from db import init_db, save_card, get_all_cards, search_cards, update_card, delete_card
-from services import gemini_service
+from services import gemini_service, status_service
 from services.gemini_service import extract_card_data
+from services.scraper_service import scrape_vendor_website
+from services.status_service import update_status
 
 app = FastAPI(title="Gifting Platform Backend")
+
+# Add Status Streaming Router
+app.include_router(status_service.router)
 
 # CORS
 origins = [
@@ -46,27 +51,115 @@ class SearchResult(BaseModel):
     image_url: str = ""
 
 @app.post("/analyze-card")
-async def analyze_card(file: UploadFile = File(...)):
-    if not file:
-        raise HTTPException(status_code=400, detail="No file uploaded")
+async def analyze_card(
+    front: UploadFile = File(...),
+    back: Optional[UploadFile] = File(None),
+    request_id: Optional[str] = Form(None)
+):
+    await update_status(request_id, "Starting upload...")
+    if not front:
+        raise HTTPException(status_code=400, detail="No front file uploaded")
     
     try:
-        # Save file with a unique name
-        file_extension = file.filename.split(".")[-1]
+        # Save Front File with a unique name
+        await update_status(request_id, "Saving image files...")
+        file_extension = front.filename.split(".")[-1]
         unique_filename = f"{uuid.uuid4()}.{file_extension}"
         file_path = f"uploads/{unique_filename}"
         
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            shutil.copyfileobj(front.file, buffer)
+            
+        # If Back File exists, merge them
+        if back:
+            try:
+                await update_status(request_id, "Merging front and back sides...")
+                # Save Back temp
+                back_ext = back.filename.split(".")[-1]
+                back_path = f"uploads/temp_back_{unique_filename}"
+                with open(back_path, "wb") as buffer:
+                    shutil.copyfileobj(back.file, buffer)
+                
+                # Open images
+                img1 = Image.open(file_path)
+                img2 = Image.open(back_path)
+                
+                # Convert to RGB to avoid mode mismatches (e.g. RGBA vs RGB)
+                if img1.mode != 'RGB': img1 = img1.convert('RGB')
+                if img2.mode != 'RGB': img2 = img2.convert('RGB')
+                
+                w1, h1 = img1.size
+                w2, h2 = img2.size
+                
+                max_width = max(w1, w2)
+                total_height = h1 + h2 + 20 # 20px padding
+                
+                new_im = Image.new('RGB', (max_width, total_height), (255, 255, 255))
+                
+                new_im.paste(img1, (0,0))
+                new_im.paste(img2, (0, h1 + 20))
+                
+                # Save combined image overwriting the original front file path
+                new_im.save(file_path)
+                
+                # Cleanup temp
+                if os.path.exists(back_path):
+                    os.remove(back_path)
+                    
+            except Exception as merge_err:
+                print(f"Image Merge Error: {merge_err}")
+                await update_status(request_id, f"Merge warning: {merge_err}")
+                if os.path.exists(back_path): os.remove(back_path)
             
         # Extract data with Gemini
+        await update_status(request_id, "AI Analysis: Reading text from card...")
         extracted_data = extract_card_data(file_path)
         
+        # 3. New Feature: Scrape Website if available
+        website = extracted_data.get("website")
+        if website:
+             print(f"Scraping website found on card: {website}")
+             await update_status(request_id, f"Found website: {website}. Scraping product details...")
+             scraped_data = scrape_vendor_website(website)
+             
+             # Capture Scrape Status/Errors
+             scrape_status = "success"
+             if not scraped_data.get("products") and not scraped_data.get("pricing_info"):
+                 if "error" in scraped_data: # If our scraper returns specific error keys
+                     scrape_status = scraped_data["error"]
+                 else:
+                     scrape_status = "no_data_found"
+             
+             # Merge Scraped Products
+             if scraped_data.get("products"):
+                 existing_products = extracted_data.get("products", "")
+                 new_products = ", ".join(scraped_data["products"])
+                 if existing_products:
+                     extracted_data["products"] = f"{existing_products}, {new_products}"
+                 else:
+                     extracted_data["products"] = new_products
+                     
+             # Add Pricing Info to Additional Info
+             if "additional_info" not in extracted_data: extracted_data["additional_info"] = {}
+             
+             if scraped_data.get("pricing_guide"):
+                 extracted_data["additional_info"]["pricing_guide"] = scraped_data["pricing_guide"]
+             elif "Failed" in str(scraped_data.get("pricing_guide", "")):
+                 extracted_data["additional_info"]["pricing_guide"] = scraped_data.get("pricing_guide")
+             
+             # Pass status to frontend
+             extracted_data["scrape_status"] = scrape_status
+        else:
+             await update_status(request_id, "No website found on card. Skipping web scrape.")
+             extracted_data["scrape_status"] = "no_website"
+
         # Add image path to response
         extracted_data["image_path"] = file_path
         
+        await update_status(request_id, "Complete")
         return extracted_data
     except Exception as e:
+        await update_status(request_id, f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/save-vendor")
