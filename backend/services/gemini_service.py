@@ -9,7 +9,8 @@ load_dotenv()
 
 API_KEY = os.environ.get("GOOGLE_API_KEY")
 # Models to try in order of preference (Fastest -> Smartest)
-MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-1.5-pro"]
+# Based on check_models.py output
+MODELS = ["gemini-2.5-flash", "gemini-2.0-flash-001", "gemini-2.5-pro"]
 
 def get_api_url(model_id):
     return f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={API_KEY}"
@@ -226,6 +227,7 @@ def search_web_gems(query: str):
                 text = text.replace("```json", "").replace("```", "").strip()
                 data = json.loads(text)
                 return {
+                    "market_insights": data.get("market_insights", fallback_data["market_insights"]),
                     "products": data.get("products", []),
                     "vendors": data.get("vendors", [])
                 }

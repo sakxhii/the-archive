@@ -29,7 +29,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all for now during dev
+    allow_origins=["http://localhost:5173", "http://localhost:3000"], # Explicit origins for credentials support
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

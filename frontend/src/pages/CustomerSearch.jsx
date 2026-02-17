@@ -169,7 +169,7 @@ const CustomerSearch = () => {
                                 <input
                                     type="text"
                                     placeholder="e.g. 'Eco-friendly desk organizers', 'Luxury leather journals'..."
-                                    className="w-full bg-transparent border-none outline-none text-brand-800 placeholder-brand-300 font-medium text-lg"
+                                    className="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 text-brand-800 placeholder-brand-300 font-medium text-lg"
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                 />
