@@ -9,7 +9,7 @@ load_dotenv()
 
 API_KEY = os.environ.get("GOOGLE_API_KEY")
 # Models to try in order of preference (Fastest -> Smartest)
-MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest", "gemini-2.5-pro"]
+MODELS = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp"]
 
 def get_api_url(model_id):
     return f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={API_KEY}"
@@ -18,24 +18,6 @@ def extract_card_data(image_path: str):
     if not API_KEY:
         return {"name": "Error: Missing API Key"}
 # ... (rest of extract_card_data is unchanged)
-
-# ... (inside search_web_gems function, replace the invalid models loop with this fallback return)
-
-    print("DEBUG: All search models failed. Returning fallback data.")        
-    return {
-        "products": [
-            {"title": "Eco-Friendly Bamboo Set", "price": "$45", "description": "Sustainable desk organizer set made from premium bamboo.", "link": "#"},
-            {"title": "Custom Leather Journal", "price": "$30", "description": "Handcrafted leather notebook with personalized embossing.", "link": "#"},
-            {"title": "Artisan Coffee Hamper", "price": "$60", "description": "Gourmet selection of single-origin beans and treats.", "link": "#"},
-            {"title": "Smart Tech Tracker", "price": "$25", "description": "Bluetooth tracker for keys and wallets with custom branding.", "link": "#"},
-            {"title": "Premium Metal Pen", "price": "$15", "description": "Weighted luxury pen suitable for corporate gifting.", "link": "#"}
-        ],
-        "vendors": [
-            {"name": "Global Green Gifting", "specialty": "Sustainable Corporate Gifts", "website": "https://example.com"},
-            {"name": "LuxeStationery Co.", "specialty": "Premium Office Supplies", "website": "https://example.com"},
-            {"name": "TechPromos intl.", "specialty": "Branded Tech Accessories", "website": "https://example.com"}
-        ]
-    }
 
     encoded_string = ""
     target_mime_type = "image/jpeg"
