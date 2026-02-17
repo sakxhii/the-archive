@@ -9,7 +9,7 @@ load_dotenv()
 
 API_KEY = os.environ.get("GOOGLE_API_KEY")
 # Models to try in order of preference (Fastest -> Smartest)
-MODELS = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp"]
+MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-1.5-pro"]
 
 def get_api_url(model_id):
     return f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={API_KEY}"
